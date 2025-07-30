@@ -46,25 +46,31 @@ def extract_structured(fields_dict):
         f"Tone: {fields_dict['tone']}. "
         f"Audience: {fields_dict['audience']}."
     )
-    # # Extraction prompt
-    # extraction_prompt = f"""
-    #     You are an assistant that normalizes user‑provided text into clean structured fields.
-    #     Input: "{user_combined}"
-    #     Produce JSON:
-    #     {{"topic":"...", "post_type":"...", "tone":"...", "audience":"..."}}
-    # """
-    # resp = llm.invoke(extraction_prompt)
-    # try:
-    #     print(json.loads(resp.content))
-    #     return json.loads(resp.content)
-    # except json.JSONDecodeError:
-    #     return None
-    return {
-        "topic": fields_dict["topic"],
-        "post_type": fields_dict["post_type"],
-        "tone": fields_dict["tone"],
-        "audience": fields_dict["audience"]
-    }
+    prompt = (
+        "You are an expert in extracting only relevant information from any text",
+        "Extract structured information from the following user input:\n"
+        f"{user_combined}\n\n"
+        "Return a JSON object with the following keys:\n"
+        "- topic: The main topic of the post\n"
+        "- post_type: The type of post (e.g. announcement, story, tip)\n"
+        "- tone: The desired tone of the post (e.g. excited, humble)\n"
+        "- audience: The target audience for the post (e.g. recruiters, students)\n"
+        "Ensure the output is a valid JSON object with no additional text."
+    )
+    response = llm.invoke(prompt)
+    
+    extracted_response = re.sub(r"```(?:json)?\s*([\s\S]*?)\s*```", r"\1", response.content).strip()
+    print(f"Structured extraction response: {extracted_response}")
+    try:
+        structured = json.loads(extracted_response)
+        if isinstance(structured, dict) and all(key in structured for key in ["topic", "post_type", "tone", "audience"]):
+            return structured
+        else:
+            print("Invalid structured output:", structured)
+            return None
+    except json.JSONDecodeError:
+        print("JSON decoding error:", extracted_response)
+        return None
 
 def parse_multiple_posts(response_text):
     response_text = re.sub(r"```(?:json)?\s*([\s\S]*?)\s*```", r"\1", response_text).strip()
