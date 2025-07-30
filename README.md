@@ -1,6 +1,6 @@
 # LinkedIn AI Agent
 
-A beginner-friendly AI agent that generates professional LinkedIn posts using Google Gemini API and LangChain.  
+A beginner-friendly AI agent that generates professional LinkedIn posts using the Google Gemini API and LangChain.  
 This project demonstrates basic prompt building and API integration as the foundation for more advanced AI agent features.
 
 ---
@@ -47,4 +47,3 @@ This project demonstrates basic prompt building and API integration as the found
     ```bash
     python main.py
     ```
-Footer
