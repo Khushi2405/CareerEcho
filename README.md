@@ -45,5 +45,6 @@ This project demonstrates basic prompt building and API integration as the found
 5. Run the main script:
 
     ```bash
-    python main.py
+    streamlit run app.py
+
     ```
