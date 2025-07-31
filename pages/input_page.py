@@ -1,43 +1,86 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
-import os, json
+import json
 import re
 
 load_dotenv()
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
-st.set_page_config(page_title="LinkedIn Post Generator")
+if "selected_post" not in st.session_state:
+    st.session_state.selected_post = None
+
+
 st.title("💼 LinkedIn Post Assistant")
+# Initialize session state with defaults if missing
+st.session_state._topic_input = st.session_state.get("topic_input", "")
+st.session_state._type_input = st.session_state.get("type_input", "")
+st.session_state._tone_input = st.session_state.get("tone_input", "")
+st.session_state._audience_input = st.session_state.get("audience_input", "")  
+st.session_state._include_hashtags = st.session_state.get("include_hashtags", False)
+st.session_state._hashtags_input = st.session_state.get("hashtags_input", "")
+st.session_state._include_emojis = st.session_state.get("include_emojis", False)
+st.session_state._version_input = st.session_state.get("version_input", "3")
+
+
+
+def store_value(key):
+    st.session_state[key] = st.session_state["_"+key]
+
 
 # Free-form input fields
 topic_input = st.text_input(
     "🧠 What is your post about?",
-    placeholder="e.g. Building my first AI agent project"
+    key="_topic_input",
+    placeholder="e.g. Building my first AI agent project",
+    on_change=lambda: store_value("topic_input")
 )
 
 type_input = st.text_input(
     "🗂️ What type of post are you making?",
-    placeholder="e.g. Project announcement, personal story, career tip"
+    key="_type_input",
+    placeholder="e.g. Project announcement, personal story, career tip",
+    on_change=lambda: store_value("type_input")
 )
 
 tone_input = st.text_input(
     "🎭 What tone do you want?",
-    placeholder="e.g. Excited, humble, informative, inspirational, formal, casual"
+    key="_tone_input",
+    placeholder="e.g. Excited, humble, informative, inspirational, formal, casual",
+    on_change=lambda: store_value("tone_input")
 )
 
 audience_input = st.text_input(
     "🎯 Who is your target audience?",
-    placeholder="e.g. Recruiters, students, hiring managers, general public"
+    key="_audience_input",
+    placeholder="e.g. Recruiters, students, hiring managers, general public",
+    on_change=lambda: store_value("audience_input")
 )
 
-include_hashtags = st.checkbox("Add relevant hashtags to the post?", value=False)
+include_hashtags = st.checkbox(
+    "Add relevant hashtags to the post?", 
+    key="_include_hashtags",
+    on_change=lambda: store_value("include_hashtags")
+)
 if include_hashtags:
     hashtags_input = st.text_input(
         "🔖 Any specific hashtags to include?",
-        placeholder="e.g. #AI #MachineLearning #CareerGrowth")
-include_emojis = st.checkbox("Add emojis to make the post more expressive?", value=False)
+        key="_hashtags_input",
+        placeholder="e.g. #AI #MachineLearning #CareerGrowth",
+        on_change=lambda: store_value("hashtags_input")
+    )
+    
+include_emojis = st.checkbox(
+    "Add emojis to make the post more expressive?", 
+    key="_include_emojis",
+    on_change=lambda: store_value("include_emojis")
+)
 
+version_input = st.text_input(
+    "Enter number of post variations to generate(1-10):",
+    key="_version_input",
+    on_change=lambda: store_value("version_input")
+)
 
 def extract_structured(fields_dict):
     user_combined = (
@@ -112,9 +155,14 @@ if st.button("Generate Post"):
                     hashtag_text = "Include relevant hashtags at the end of the post."
             else:
                 hashtag_text = "Do not add any hashtags."
+
+            num_variations = version_input.strip()
+            if not num_variations.isdigit() or not (1 <= int(num_variations) <= 10):
+                st.warning("Please enter a valid number of variations (1-10). Defaulting to 3.")
+                num_variations = "3"
             # Clean prompt for generating the post
             clean_prompt = (
-                f"Write 3 different versions of a {structured['tone']} LinkedIn {structured['post_type']} "
+                f"Write {num_variations} different versions of a {structured['tone']} LinkedIn {structured['post_type']} "
                 f"targeted at {structured['audience']} about: {structured['topic']}. "
                 f"{hashtag_text} "
                 f"{'Include' if include_emojis else 'Do not include'} emojis. "
@@ -123,10 +171,21 @@ if st.button("Generate Post"):
             with st.spinner("Generating post..."):
                 result = llm.invoke(clean_prompt)
             posts = parse_multiple_posts(result.content)
-            print(f"Generated posts: {posts}")
-            st.subheader("✍️ Generated Post Variations")
-            for i, post in enumerate(posts, 1):
-                st.markdown(f"### Post {i}")
-                st.write(post)
-                st.markdown("---")
-            st.caption("🔁 Edit inputs or refine prompt above to regenerate.")
+            st.session_state.generated_posts = posts
+
+if "generated_posts" in st.session_state and st.session_state.generated_posts:
+    st.subheader("✍️ Choose a Version to Edit")
+    posts = st.session_state.generated_posts
+    for i, post in enumerate(posts):
+        if st.button("Test print", key=f"Test_{i}"):
+            st.success(f"Selected post {i+1}!")
+            print("Button pressed!")
+
+        if st.button(f"Select Post {i+1}", key=f"select_post_{i}"):
+            st.session_state.selected_post = post
+            st.session_state.page = "edit"
+            # store_value()
+            print("Session State in input:", st.session_state)
+            st.switch_page("pages/edit_page.py")
+        st.text_area(f"Post {i+1}", post, height=200)
+        st.markdown("---")
