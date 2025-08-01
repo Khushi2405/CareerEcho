@@ -18,23 +18,14 @@ if "edited_text" not in st.session_state:
 
 def refine_post_on_click():
     with st.spinner("Refining your post with AI..."):
-        context = {
-            "topic": st.session_state.get("topic_input", ""),
-            "type": st.session_state.get("type_input", ""),
-            "tone": st.session_state.get("tone_input", ""),
-            "audience": st.session_state.get("audience_input", ""),
-            "hashtag_text": st.session_state.get("hashtag_text", ""),
-            "include_emojis": st.session_state.get("include_emojis", False),
-        }
 
         system_prompt = f"""
-        You are a helpful assistant that refines LinkedIn posts.
-        The post is about: {context['topic']}
-        Type of post: {context['type']}
-        Desired tone: {context['tone']}
-        Target audience: {context['audience']}
-        Include emojis: {'Yes' if context['include_emojis'] else 'No'}
-        {context['hashtag_text']}
+        You are a helpful assistant that helps refines LinkedIn posts created by AI.
+        This was the prompt used to generate the post:
+        Topic: {st.session_state.get("prompt", "")}
+        Use this prompt to refine the post.
+        Your task is to improve the post while keeping the original intent and content.
+        If the user has provided any [PERSON] names, keep them as is.
         Return only the posts using \\n for new lines. Do not include any text other than the actual post and it should be clearly formatted for LinkedIn."
         """
         if user_prompt:

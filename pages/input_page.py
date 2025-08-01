@@ -173,7 +173,6 @@ if st.button("Generate Post"):
                     hashtag_text = "Include relevant hashtags at the end of the post."
             else:
                 hashtag_text = "Do not add any hashtags."
-            st.session_state["hashtag_text"] = hashtag_text
 
             num_variations = version_input.strip()
             if not num_variations.isdigit() or not (1 <= int(num_variations) <= 10):
@@ -189,6 +188,7 @@ if st.button("Generate Post"):
             )
             if mask_names:
                 clean_prompt = mask_person_names(clean_prompt)
+            st.session_state.prompt = clean_prompt
             with st.spinner("Generating post..."):
                 result = llm.invoke(clean_prompt)
             posts = parse_multiple_posts(result.content)
