@@ -1,21 +1,21 @@
 # main.py
 import streamlit as st
 
-st.set_page_config(page_title="LinkedIn Post Assistant", layout="centered", initial_sidebar_state="collapsed")
-print("Session State in main:", st.session_state)
+st.set_page_config(page_title="LinkCraft", layout="centered", initial_sidebar_state="collapsed")
 
-if "page" not in st.session_state:
-    st.session_state.page = "input"
+st.title("🔗 CareerEcho")
+st.subheader("Your career, reflected and amplified")
 
-if st.session_state.page == "input":
-    st.switch_page("pages/input_page.py")
-elif st.session_state.page == "edit":
-    st.switch_page("pages/edit_page.py")
+st.write("Choose what you'd like to do:")
 
+col1, col2 = st.columns(2)
 
-# if "selected_post" in st.session_state and st.session_state.selected_post:
-#     with st.spinner("Loading editor..."):
-#         st.switch_page("pages/edit_page.py")
-# else:
-#     with st.spinner("Loading..."):
-#         st.switch_page("pages/input_page.py")
+with col1:
+    if st.button("📄 Upload & Review Resume"):
+        st.session_state.page = "review"
+        st.switch_page("pages/upload_pdf.py")
+
+with col2:
+    if st.button("✍️ Generate LinkedIn Post"):
+        st.session_state.page = "post"
+        st.switch_page("pages/input_page.py")
