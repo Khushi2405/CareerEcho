@@ -75,4 +75,6 @@ if st.button("✅ Save Final Version"):
 # Navigation button to go back to input page
 if st.button("🔙 Back to Input Page"):
     st.session_state.page = "input"
+    if "edited_text" in st.session_state:
+        del st.session_state["edited_text"]
     st.switch_page("pages/input_page.py")
