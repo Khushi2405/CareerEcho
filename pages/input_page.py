@@ -3,10 +3,11 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 import json
 import re
+import spacy
 
 load_dotenv()
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-
+nlp = spacy.load("en_core_web_sm")
 if "selected_post" not in st.session_state:
     st.session_state.selected_post = None
 
@@ -21,6 +22,7 @@ st.session_state._include_hashtags = st.session_state.get("include_hashtags", Fa
 st.session_state._hashtags_input = st.session_state.get("hashtags_input", "")
 st.session_state._include_emojis = st.session_state.get("include_emojis", False)
 st.session_state._version_input = st.session_state.get("version_input", "3")
+st.session_state._mask_names = st.session_state.get("mask_names", False)
 
 
 
@@ -57,11 +59,18 @@ audience_input = st.text_input(
     on_change=lambda: store_value("audience_input")
 )
 
+version_input = st.text_input(
+    "Enter number of post variations to generate(1-10):",
+    key="_version_input",
+    on_change=lambda: store_value("version_input")
+)
+
 include_hashtags = st.checkbox(
     "Add relevant hashtags to the post?", 
     key="_include_hashtags",
     on_change=lambda: store_value("include_hashtags")
 )
+
 if include_hashtags:
     hashtags_input = st.text_input(
         "🔖 Any specific hashtags to include?",
@@ -76,11 +85,19 @@ include_emojis = st.checkbox(
     on_change=lambda: store_value("include_emojis")
 )
 
-version_input = st.text_input(
-    "Enter number of post variations to generate(1-10):",
-    key="_version_input",
-    on_change=lambda: store_value("version_input")
+mask_names = st.checkbox(
+    "Anonymize personal names in input?", 
+    key="_mask_names", 
+    on_change=lambda: store_value("mask_names")
 )
+
+def mask_person_names(text: str) -> str:
+    doc = nlp(text)
+    spans_to_mask = [(ent.start_char, ent.end_char) for ent in doc.ents if ent.label_ == "PERSON"]
+    for start, end in sorted(spans_to_mask, reverse=True):
+        text = text[:start] + "[PERSON]" + text[end:]
+    return text
+
 
 def extract_structured(fields_dict):
     user_combined = (
@@ -90,16 +107,19 @@ def extract_structured(fields_dict):
         f"Audience: {fields_dict['audience']}."
     )
     prompt = (
-        "You are an expert in extracting only relevant information from any text",
-        "Extract structured information from the following user input:\n"
+        f"You are an expert in extracting all relevant information from any text, if the user has provided any"
+        "[PERSON] names, that is the masked name, keep it as is. " 
+        f"Extract structured information from the following user input:\n"
         f"{user_combined}\n\n"
-        "Return a JSON object with the following keys:\n"
-        "- topic: The main topic of the post\n"
-        "- post_type: The type of post (e.g. announcement, story, tip)\n"
-        "- tone: The desired tone of the post (e.g. excited, humble)\n"
-        "- audience: The target audience for the post (e.g. recruiters, students)\n"
-        "Ensure the output is a valid JSON object with no additional text."
+        f"Return a JSON object with the following keys:\n"
+        f"- topic: The main topic of the post, include all the details the user wants in the post\n"
+        f"- post_type: The type of post (e.g. announcement, story, tip)\n"
+        f"- tone: The desired tone of the post (e.g. excited, humble)\n"
+        f"- audience: The target audience for the post (e.g. recruiters, students)\n"
+        f"Ensure the output is a valid JSON object with no additional text."
     )
+    if mask_names:
+        prompt = mask_person_names(prompt)
     response = llm.invoke(prompt)
     
     extracted_response = re.sub(r"```(?:json)?\s*([\s\S]*?)\s*```", r"\1", response.content).strip()
@@ -116,8 +136,8 @@ def extract_structured(fields_dict):
 
 def parse_multiple_posts(response_text):
     response_text = re.sub(r"```(?:json)?\s*([\s\S]*?)\s*```", r"\1", response_text).strip()
-    
-    
+    if not response_text:
+        return []
     try:
         # Expecting JSON array: ["post 1 text", "post 2 text", "post 3 text"]
         posts = json.loads(response_text)
@@ -167,6 +187,8 @@ if st.button("Generate Post"):
                 f"{'Include' if include_emojis else 'Do not include'} emojis. "
                 f"Return only the posts as a JSON array of strings, with each post using \\n for new lines. Do not include any text outside the JSON block. Each post should be clearly formatted for LinkedIn."
             )
+            if mask_names:
+                clean_prompt = mask_person_names(clean_prompt)
             with st.spinner("Generating post..."):
                 result = llm.invoke(clean_prompt)
             posts = parse_multiple_posts(result.content)
