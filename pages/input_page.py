@@ -103,7 +103,6 @@ def extract_structured(fields_dict):
     response = llm.invoke(prompt)
     
     extracted_response = re.sub(r"```(?:json)?\s*([\s\S]*?)\s*```", r"\1", response.content).strip()
-    print(f"Structured extraction response: {extracted_response}")
     try:
         structured = json.loads(extracted_response)
         if isinstance(structured, dict) and all(key in structured for key in ["topic", "post_type", "tone", "audience"]):
@@ -117,7 +116,7 @@ def extract_structured(fields_dict):
 
 def parse_multiple_posts(response_text):
     response_text = re.sub(r"```(?:json)?\s*([\s\S]*?)\s*```", r"\1", response_text).strip()
-    print(f"Raw response: {response_text}")
+    
     
     try:
         # Expecting JSON array: ["post 1 text", "post 2 text", "post 3 text"]
@@ -140,7 +139,6 @@ if st.button("Generate Post"):
                 "tone": tone_input,
                 "audience": audience_input
             })
-            print(structured)
         if not structured:
             st.error("Couldn't parse inputs—please simplify and try again.")
         else:
@@ -155,6 +153,7 @@ if st.button("Generate Post"):
                     hashtag_text = "Include relevant hashtags at the end of the post."
             else:
                 hashtag_text = "Do not add any hashtags."
+            st.session_state["hashtag_text"] = hashtag_text
 
             num_variations = version_input.strip()
             if not num_variations.isdigit() or not (1 <= int(num_variations) <= 10):
@@ -177,15 +176,9 @@ if "generated_posts" in st.session_state and st.session_state.generated_posts:
     st.subheader("✍️ Choose a Version to Edit")
     posts = st.session_state.generated_posts
     for i, post in enumerate(posts):
-        if st.button("Test print", key=f"Test_{i}"):
-            st.success(f"Selected post {i+1}!")
-            print("Button pressed!")
-
         if st.button(f"Select Post {i+1}", key=f"select_post_{i}"):
             st.session_state.selected_post = post
             st.session_state.page = "edit"
-            # store_value()
-            print("Session State in input:", st.session_state)
             st.switch_page("pages/edit_page.py")
         st.text_area(f"Post {i+1}", post, height=200)
         st.markdown("---")
