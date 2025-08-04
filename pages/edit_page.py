@@ -41,7 +41,11 @@ def refine_post_on_click():
             refined_post = response.content.strip()
             st.session_state.edited_text = refined_post
         except Exception as e:
-            st.error(f"Error during AI refinement: {e}")
+            print(f"Error invoking refining linkedin post LLM: {e}")
+            if "429" in str(e): 
+                st.error("Rate limit exceeded. Please try again later.")
+            else:
+                st.error("An error occurred while generating feedback. Please try again later.")
 
 # Editable text area with pre-filled selected post
 edited_text = st.text_area(

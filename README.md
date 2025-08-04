@@ -1,19 +1,24 @@
-# LinkedIn AI Agent
+# Career Agent
 
-A beginner-friendly AI agent that generates professional LinkedIn posts using the Google Gemini API and LangChain.  
-This project demonstrates basic prompt building and API integration as the foundation for more advanced AI agent features.
+Career Agent is an AI-powered assistant designed to help users enhance their career development. It provides features such as resume analysis and generating professional LinkedIn posts.
 
----
+## Live Demo
+Access the app here: [Career Agent](https://personal-career-agent.streamlit.app/upload_pdf)
 
-## Setup Instructions
 
-1. **Clone the repo:**
+## Features
+- Upload and analyze PDF resumes
+- Generate LinkedIn Posts and edit them
 
-    ```bash
-    git clone https://github.com/Khushi2405/linkedin-ai-agent.git
-    cd linkedin-ai-agent
-    ```
-
+## Installation
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/Khushi2405/career-agent.git
+   ```
+2. Navigate to the project directory:
+   ```sh
+   cd linkedin-ai-agent
+   ```
 2. **Create and activate a virtual environment:**
 
     On macOS/Linux:
@@ -26,14 +31,14 @@ This project demonstrates basic prompt building and API integration as the found
 
     ```bash
     python -m venv venv
-    venv\Scripts\activate
+    venv/Scripts/activate
     ```
-3. Install dependencies:
 
-    ```bash
-    pip install -r requirements.txt
-    ```
-4. Get your Google API key
+4. Install dependencies:
+   ```sh
+   pip install -r requirements.txt
+   ```
+5. Get your Google API key
     - Go to [Google AI Studio](https://makersuite.google.com/app/apikey)  
     - Sign in with your Google account  
     - Click **"Create API Key"**  
@@ -42,9 +47,20 @@ This project demonstrates basic prompt building and API integration as the found
       ```ini
       GOOGLE_API_KEY=your_actual_api_key_here
       ```
-5. Run the main script:
+6. Run the main script:
 
     ```bash
-    streamlit run app.py
+    streamlit run main.py
 
     ```
+
+## Project Structure
+- `main.py`: Entry point for the application
+- `pages/`: Contains UI and logic for different pages
+  - `input_page.py`: Handles user input to generate linkedin posts
+  - `edit_page.py`: Allows editing selected linkedin posts
+  - `upload_pdf.py`: upload resume to get detailed analysis
+- `requirements.txt`: Python dependencies
+
+## License
+This project is licensed under the MIT License.

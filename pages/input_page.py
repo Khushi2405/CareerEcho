@@ -4,10 +4,15 @@ from dotenv import load_dotenv
 import json
 import re
 import spacy
+from spacy.cli import download
 
 load_dotenv()
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-nlp = spacy.load("en_core_web_sm")
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    download("en_core_web_sm")
+    nlp = spacy.load("en_core_web_sm")
 if "selected_post" not in st.session_state:
     st.session_state.selected_post = None
 
@@ -120,8 +125,16 @@ def extract_structured(fields_dict):
     )
     if mask_names:
         prompt = mask_person_names(prompt)
-    response = llm.invoke(prompt)
-    
+    try:
+        response = llm.invoke(prompt)
+    except Exception as e:
+        print(f"Error invoking LLM: {e}")
+        if "429" in str(e):
+            st.error("Rate limit exceeded. Please try again later.")
+        else:
+            st.error("An unexpected error occurred while processing your request. Please try again later.")
+        return None
+            
     extracted_response = re.sub(r"```(?:json)?\s*([\s\S]*?)\s*```", r"\1", response.content).strip()
     try:
         structured = json.loads(extracted_response)
