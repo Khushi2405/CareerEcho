@@ -8,11 +8,7 @@ from spacy.cli import download
 
 load_dotenv()
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    download("en_core_web_sm")
-    nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_sm")
 if "selected_post" not in st.session_state:
     st.session_state.selected_post = None
 
