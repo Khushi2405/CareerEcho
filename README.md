@@ -3,7 +3,7 @@
 CareerEcho is an AI-powered assistant designed to help users enhance their career development. It provides features such as resume analysis and generating professional LinkedIn posts. Mre features will be added in the future.
 
 ## Live Demo
-Access the app here: [Career Agent](https://personal-career-agent.streamlit.app/upload_pdf)
+Access the app here: [Career Agent](https://career-echo.streamlit.app/)
 
 
 ## Features
