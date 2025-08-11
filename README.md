@@ -13,11 +13,11 @@ Access the app here: [Career Agent](https://personal-career-agent.streamlit.app/
 ## Installation
 1. Clone the repository:
    ```sh
-   git clone https://github.com/Khushi2405/career-agent.git
+   git clone https://github.com/Khushi2405/CareerEcho.git
    ```
 2. Navigate to the project directory:
    ```sh
-   cd linkedin-ai-agent
+   cd CareerEcho
    ```
 2. **Create and activate a virtual environment(optional):**
 
@@ -31,7 +31,7 @@ Access the app here: [Career Agent](https://personal-career-agent.streamlit.app/
 
     ```bash
     python -m venv venv
-    venv/Scripts/activate
+    source venv/Scripts/activate
     ```
 
 4. Install dependencies:

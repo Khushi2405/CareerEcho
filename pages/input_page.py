@@ -3,12 +3,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 import json
 import re
-import spacy
-from spacy.cli import download
 
 load_dotenv()
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-nlp = spacy.load("en_core_web_sm")
 if "selected_post" not in st.session_state:
     st.session_state.selected_post = None
 
@@ -86,19 +83,6 @@ include_emojis = st.checkbox(
     on_change=lambda: store_value("include_emojis")
 )
 
-mask_names = st.checkbox(
-    "Anonymize personal names in input?", 
-    key="_mask_names", 
-    on_change=lambda: store_value("mask_names")
-)
-
-def mask_person_names(text: str) -> str:
-    doc = nlp(text)
-    spans_to_mask = [(ent.start_char, ent.end_char) for ent in doc.ents if ent.label_ == "PERSON"]
-    for start, end in sorted(spans_to_mask, reverse=True):
-        text = text[:start] + "[PERSON]" + text[end:]
-    return text
-
 
 def extract_structured(fields_dict):
     user_combined = (
@@ -119,8 +103,6 @@ def extract_structured(fields_dict):
         f"- audience: The target audience for the post (e.g. recruiters, students)\n"
         f"Ensure the output is a valid JSON object with no additional text."
     )
-    if mask_names:
-        prompt = mask_person_names(prompt)
     try:
         response = llm.invoke(prompt)
     except Exception as e:
@@ -195,8 +177,6 @@ if st.button("Generate Post"):
                 f"{'Include' if include_emojis else 'Do not include'} emojis. "
                 f"Return only the posts as a JSON array of strings, with each post using \\n for new lines. Do not include any text outside the JSON block. Each post should be clearly formatted for LinkedIn."
             )
-            if mask_names:
-                clean_prompt = mask_person_names(clean_prompt)
             st.session_state.prompt = clean_prompt
             with st.spinner("Generating post..."):
                 result = llm.invoke(clean_prompt)
